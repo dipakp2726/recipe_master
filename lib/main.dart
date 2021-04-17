@@ -42,6 +42,14 @@ class _HomeState extends State<Home> {
 
   List<Item> recipeList;
 
+  bool _isloading = false;
+
+  void toggleLoading() {
+    setState(() {
+      _isloading = !_isloading;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,29 +92,39 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _image == null
-                ? Text('No image selected.')
-                : Image.file(
-                    _image,
-                    height: 200,
-                    width: 200,
-                    fit: BoxFit.cover,
+        child: _isloading
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CupertinoActivityIndicator(
+                    radius: 18,
                   ),
-            SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () => getImage(ImageSource.camera),
-              child: Text('select image from camera'),
-            ),
-            SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () => getImage(ImageSource.gallery),
-              child: Text('select image from gallery'),
-            )
-          ],
-        ),
+                  Text('Processing')
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  _image == null
+                      ? Text('No image selected.')
+                      : Image.file(
+                          _image,
+                          height: 200,
+                          width: 200,
+                          fit: BoxFit.cover,
+                        ),
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: () => getImage(ImageSource.camera),
+                    child: Text('select image from camera'),
+                  ),
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: () => getImage(ImageSource.gallery),
+                    child: Text('select image from gallery'),
+                  )
+                ],
+              ),
       ),
       floatingActionButton: _getFab(),
     );
@@ -114,31 +132,39 @@ class _HomeState extends State<Home> {
 
   _getFab() {
     if (_image != null) {
-      return FloatingActionButton.extended(
-        onPressed: () async {
-          Tflite.runModelOnImage(path: _image.path, asynch: true)
-              .then((value) async {
-            print(value);
+      if (!_isloading)
+        return FloatingActionButton.extended(
+          onPressed: () async {
+            toggleLoading();
 
-            if (value.length > 0) {
-              final Map itemName = value.first;
+            await Future.delayed(Duration(seconds: 2));
 
-              final item = recipeList
-                  .where((element) => element.name == itemName['label']);
+            Tflite.runModelOnImage(path: _image.path, asynch: true)
+                .then((value) async {
+              print(value);
 
+              if (value.length > 0) {
+                final Map itemName = value.first;
 
+                final item = recipeList.where((element) =>
+                    element.name.trim().toLowerCase() ==
+                    itemName['label'].toString().trim().toLowerCase());
 
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => Result(item: item.first)));
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('No item found'),
-              ));
-            }
-          });
-        },
-        label: Text('get recipe'),
-      );
+                await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => Result(item: item.first)));
+                toggleLoading();
+              } else {
+                toggleLoading();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('No item found'),
+                ));
+              }
+            });
+          },
+          label: Text('get recipe'),
+        );
     }
   }
 }
@@ -150,29 +176,68 @@ class Result extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              SizedBox(height: 20),
-              Center(
-                child: Text(
-                  'Item name : ${item.name}',
-                  style: TextStyle(fontSize: 24),
-                ),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(),
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(height: 20),
+                  Text(
+                    'Item name : ${item.name}',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                  SizedBox(height: 10),
+                  if (item.diet != '')
+                    Text(
+                      'Diet type : ${item.diet}',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  SizedBox(height: 20),
+                  ExpansionTile(
+                    leading: Icon(Icons.fastfood_rounded),
+                    title: Text('ingredients'),
+                    children: [
+                      Text(
+                        item.ingredients1,
+                        style: TextStyle(fontSize: 16),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+
+                  /// Recipe
+                  ExpansionTile(
+                    leading: Icon(Icons.food_bank_sharp),
+                    childrenPadding: EdgeInsets.all(10),
+                    title: Text('Recipe'),
+                    children: [
+                      Text(
+                        item.recipe1,
+                        style: TextStyle(fontSize: 16),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  if (item.nutritions != '')
+                    ExpansionTile(
+                      leading: Icon(Icons.more),
+                      childrenPadding: EdgeInsets.all(10),
+                      title: Text('Nutritions'),
+                      children: [
+                        Text(
+                          item.nutritions,
+                          style: TextStyle(fontSize: 16),
+                        )
+                      ],
+                    ),
+                ],
               ),
-              ExpansionTile(
-                title: Text('ingredients'),
-                children: [Text(item.ingredients1)],
-              ),
-              ExpansionTile(
-                title: Text('Recipe'),
-                children: [Text(item.recipe1)],
-              ),
-            ],
+            ),
           ),
         ),
       ),
