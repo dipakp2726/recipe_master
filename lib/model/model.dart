@@ -6,8 +6,7 @@ class Item {
   String name;
   String ingredients;
   String diet;
-  String prepTime;
-  String cookTime;
+
   String flavorProfile;
   String course;
   String state;
@@ -23,8 +22,6 @@ class Item {
       {this.name,
       this.ingredients,
       this.diet,
-      this.prepTime,
-      this.cookTime,
       this.flavorProfile,
       this.course,
       this.state,
@@ -40,8 +37,7 @@ class Item {
     name = json['name'];
     ingredients = json['ingredients'];
     diet = json['diet'];
-    prepTime = json['prep_time'];
-    cookTime = json['cook_time'];
+
     flavorProfile = json['flavor_profile'];
     course = json['course'];
     state = json['state'];
@@ -59,8 +55,7 @@ class Item {
     data['name'] = this.name;
     data['ingredients'] = this.ingredients;
     data['diet'] = this.diet;
-    data['prep_time'] = this.prepTime;
-    data['cook_time'] = this.cookTime;
+
     data['flavor_profile'] = this.flavorProfile;
     data['course'] = this.course;
     data['state'] = this.state;
@@ -72,30 +67,5 @@ class Item {
     data['recipe3'] = this.recipe3;
     data['Nutritions'] = this.nutritions;
     return data;
-  }
-
-  List<Item> fromMapList(List<dynamic> dynamicDataList) {
-    final List<Item> ItemList = <Item>[];
-
-    if (dynamicDataList != null) {
-      for (dynamic dynamicData in dynamicDataList) {
-        if (dynamicData != null) {
-          ItemList.add(Item.fromJson(dynamicData));
-        }
-      }
-    }
-    return ItemList;
-  }
-
-  List<Map<String, dynamic>> toMapList(List<Item> objectList) {
-    final List<Map<String, dynamic>> mapList = <Map<String, dynamic>>[];
-    if (objectList != null) {
-      for (Item data in objectList) {
-        if (data != null) {
-          mapList.add(data.toJson());
-        }
-      }
-    }
-    return mapList;
   }
 }

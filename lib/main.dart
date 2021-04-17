@@ -14,11 +14,17 @@ void main() {
   runApp(MyApp());
 }
 
+List<Item> parseItems(String responseBody) {
+  final parsed = jsonDecode(responseBody).cast<Map<String, dynamic>>();
+
+  return parsed.map<Item>((json) => Item.fromJson(json)).toList();
+}
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return CupertinoApp(
+    return MaterialApp(
       title: 'Recipe Master',
       home: Home(),
     );
@@ -34,11 +40,18 @@ class _HomeState extends State<Home> {
   File _image;
   final picker = ImagePicker();
 
+  List<Item> recipeList;
+
   @override
-  void initState() async {
+  void initState() {
     super.initState();
 
-    await loadModel();
+    rootBundle.loadString('assets/recipe.json').then((value) {
+      recipeList = parseItems(value);
+      print(recipeList);
+    });
+
+    loadModel().then((value) => print('model loaded'));
   }
 
   @override
@@ -113,7 +126,7 @@ class _HomeState extends State<Home> {
               final item = recipeList
                   .where((element) => element.name == itemName['label']);
 
-              print(item);
+
 
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => Result(item: item.first)));
