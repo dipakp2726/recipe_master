@@ -24,7 +24,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return CupertinoApp(
+      debugShowCheckedModeBanner: false,
       title: 'Recipe Master',
       home: Home(),
     );
@@ -56,7 +57,6 @@ class _HomeState extends State<Home> {
 
     rootBundle.loadString('assets/recipe.json').then((value) {
       recipeList = parseItems(value);
-      print(recipeList);
     });
 
     loadModel().then((value) => print('model loaded'));
@@ -97,6 +97,7 @@ class _HomeState extends State<Home> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CupertinoActivityIndicator(
+                    animating: true,
                     radius: 18,
                   ),
                   Text('Processing')
@@ -116,12 +117,12 @@ class _HomeState extends State<Home> {
                   SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: () => getImage(ImageSource.camera),
-                    child: Text('select image from camera'),
+                    child: Text('Get image from camera'),
                   ),
                   SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: () => getImage(ImageSource.gallery),
-                    child: Text('select image from gallery'),
+                    child: Text('Select image from gallery'),
                   )
                 ],
               ),
